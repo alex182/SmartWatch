@@ -63,9 +63,9 @@
 
 
 
-int16_t hour = 9;
-int16_t minute = 59;
-int16_t second = 55;
+int16_t hour = 0;
+int16_t minute = 0;
+int16_t second = 0;
 
 //Navigation values 
 bool isNotification = true;
@@ -105,7 +105,10 @@ void setup() {
   pinMode(upPin, INPUT_PULLUP);
   pinMode(selectPin, INPUT_PULLUP);   
   t.every(1000, updateClock);
+  t.every(5000,getTime);
   updateClock();
+  getTime();
+
 }
 
 void loop() {
@@ -340,8 +343,8 @@ void drawTimer(){
 
      tft.fillRect(0,0,128,128,RED);
 
-    toggleNav(false, false, false, true);
-
+   toggleNav(false, false, false, true);
+   getTime();
 
    tft.setTextColor(WHITE,BLACK); 
    tft.setTextSize(1); 
@@ -352,7 +355,6 @@ void drawTimer(){
 
 
 void updateClock(){
-   
    second+=1; 
  
   tft.setTextColor(WHITE,BLACK);  
@@ -406,6 +408,32 @@ if(isNotification){
     tft.setCursor(0,0);
     tft.setTextSize(1);
     tft.print("MESSAGE");
+  }
+}
+
+
+
+void getTime(){
+  while(Serial.available() > 0){
+    tft.setTextColor(WHITE,BLACK); 
+
+    String input = Serial.readStringUntil('\n');
+    Serial.read();
+    
+    int barIndexOne = input.indexOf('|');
+    int barIndexTwo = input.indexOf('|',barIndexOne+1); 
+  
+    String currentTime = input.substring(barIndexOne+1,barIndexTwo);    
+
+    int hourIndex = currentTime.indexOf(':'); 
+    int minuteIndex = currentTime.indexOf(hourIndex+1,':'); 
+    int secondIndex = currentTime.indexOf(minuteIndex+1,':'); 
+
+    
+    hour = currentTime.substring(0,hourIndex).toInt();
+    minute = currentTime.substring(hourIndex+1,minuteIndex).toInt();
+    second = currentTime.substring(minuteIndex+1, secondIndex).toInt(); 
+
   }
 }
 
