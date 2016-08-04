@@ -253,6 +253,13 @@ void drawTimerStop(){
    tft.print("Stop");
 }
 
+void drawMenuOption(){
+
+   tft.setTextSize(1); 
+   tft.setCursor(100,0);
+   tft.print("MENU"); 
+}
+
 
 void  timerDown(){
   delay(100);
@@ -288,23 +295,35 @@ void  timerDown(){
        tft.setTextColor(BLACK,WHITE);
        printTimerSecond();  
   }
-  else if(timerOption == 3){
-
-    tft.setTextColor(WHITE,BLACK);
-    printTimerSecond();  
-  
-    tft.setTextColor(BLACK,GREEN);
+  else if(timerOption == 3){  
+    tft.setTextColor(GREEN,BLACK);
     drawTimerStart();
+
+    tft.setTextColor(BLACK, RED);
+    drawTimerStop();
+
+    timerOption = 4;
    }
   else if(timerOption == 4){
 
-   tft.setTextColor(GREEN, BLACK);
-   drawTimerStart();
-   
-   tft.setTextColor(BLACK, RED);
+   tft.setTextColor(RED,BLACK);
    drawTimerStop();
 
- }
+   tft.setTextColor(BLACK,WHITE); 
+   drawMenuOption();
+
+   timerOption = 5;
+   }
+   else{
+     tft.setTextColor(WHITE,BLACK); 
+     drawMenuOption();
+
+     tft.setTextColor(BLACK,WHITE);
+     printTimerHour();
+
+     timerOption = 0;
+   }
+  
  
 }
 
@@ -370,32 +389,34 @@ void timerSelect(){
      printTimerSecond(); 
 
      tft.setTextColor(BLACK,GREEN);
-     drawTimerStart(); 
-     
+     drawTimerStart();    
      timerOption = 3;
   }
   else if(timerOption == 3){
-    //stop timer
-
+    //start timer
    tft.setTextColor(GREEN,BLACK);
    drawTimerStart();
 
+   // select stop button
    tft.setTextColor(BLACK,RED);
    drawTimerStop();
    
    timerOption = 4;
   }
   else if(timerOption == 4){
-    //select reset
+    //stop timer
+    tft.setTextColor(RED,BLACK);
+    drawTimerStop();
+
+   tft.setTextColor(BLACK,WHITE); 
+   drawMenuOption();
+   
     timerOption = 5; 
   }
-  else if(timerOption == 5){
-    //select menu
-    timerOption = 0; 
-  }
   else{
-    //select hour
-    timerOption = 0;
+    //draw menu
+    drawMenuOptions();
+    timerOption = 0; 
   }
 }
 
