@@ -89,6 +89,17 @@ int menuOptionsX[] = {20,20,20,20,100};
 int menuOptionsY[] = {50,40,30,20,0};
 String menuOptions [] = {"OPTION 4","TIMER","MESSAGES","HOME","MENU"};
 
+int timerOption = 0; 
+int timerOptionCount = 4;
+int goalHour = 0;
+int goalMinute = 0;
+int goalSecond = 0; 
+int timerHour = 0;
+int timerMinute = 0; 
+int timerSecond = 0; 
+bool timerHit = false;
+bool timerSet = false; 
+String timerPosition [] = {"start","stop"}; 
 
 
 // Option 1: use any pins but a little slower
@@ -105,9 +116,11 @@ void setup() {
   pinMode(upPin, INPUT_PULLUP);
   pinMode(selectPin, INPUT_PULLUP);   
   t.every(1000, updateClock);
-  t.every(5000,getTime);
+//  t.every(500,getTextMessage);
   updateClock();
-  getTime();
+    getTime();
+
+//   getTextMessage();
 
 }
 
@@ -119,36 +132,271 @@ void loop() {
   t.update();
   
   if (down == LOW) {   
-          Serial.println("down");
-     
-    if(isMenu == true){
+    if(isMenu){
       menuDown();
+    }
+
+    if(isTimer){
+      timerDown(); 
     }
   }
 
   if(up == LOW){
-                Serial.println("up");
-
-    if(isMenu == true){
+    if(isMenu){
       menuUp(); 
+    }
+    if(isTimer){
+      timerUp(); 
     }
     
   }
 
-  if(select == LOW){
-          Serial.println("select");
-
-    if(!isMenu)
-    {
+  if(select == LOW){    
+    if(!isMenu && !isTimer){
       drawMenuOptions();
     }
     else if(isMenu){
       menuSelect();
     }
+    else if(isTimer){
+      timerSelect(); 
+    }
   }
 
   
 
+}
+
+
+void drawTimer(){
+  
+   toggleNav(false, false, false, true);
+   
+   tft.fillRect(0,0,128,128,BLACK);
+
+   tft.setCursor(15,32);
+   tft.setTextColor(BLACK,WHITE); 
+   tft.setTextSize(2);
+   
+   tft.print("00");
+   tft.setTextColor(WHITE,BLACK);  
+   tft.print(":00:00");
+
+   tft.setCursor(32,58);
+   tft.setTextColor(GREEN,BLACK);
+   tft.setTextSize(2);
+   tft.print("Start");
+
+    tft.setCursor(40,80);
+   tft.setTextColor(RED,BLACK);
+   tft.setTextSize(2);
+   tft.print("Stop");
+   
+   tft.setTextColor(WHITE,BLACK); 
+   tft.setTextSize(1); 
+   tft.setCursor(100,0);
+   tft.print("MENU"); 
+}
+
+
+void printTimerHour(){
+     tft.setTextSize(2); 
+     tft.setCursor(15,32); 
+
+      if(goalHour < 10){
+         tft.print(0);
+         tft.print(goalHour);
+      }
+      else{
+        tft.print(goalHour);    
+      }       
+}
+
+void printTimerMinute (){
+     tft.setTextSize(2);
+     tft.setCursor(49,32); 
+
+      if(goalMinute < 10){
+         tft.print(0);
+         tft.print(goalMinute);
+      }
+      else{
+        tft.print(goalMinute);    
+      }        
+}
+
+void printTimerSecond (){
+     tft.setTextSize(2);
+     tft.setCursor(89,32); 
+
+      if(goalSecond < 10){
+         tft.print(0);
+         tft.print(goalSecond);
+      }
+      else{
+        tft.print(goalSecond);    
+      }        
+}
+
+void drawTimerStart(){
+ 
+     tft.setCursor(32,58);
+     tft.setTextSize(2);
+     tft.print("Start");
+  
+}
+
+void drawTimerStop(){
+  
+   tft.setCursor(40,80);
+   tft.setTextSize(2);
+   tft.print("Stop");
+}
+
+
+void  timerDown(){
+  delay(100);
+  
+  if(timerOption == 0){  
+    if(goalHour != 0){
+      goalHour = goalHour - 1; 
+    }
+    else{
+      goalHour = 99; 
+    }
+     tft.setTextColor(BLACK,WHITE);
+     printTimerHour();
+  }
+  else if(timerOption == 1){
+      if(goalMinute != 0){
+        goalMinute = goalMinute - 1; 
+      }
+      else
+      {
+        goalMinute = 60;
+      }
+       tft.setTextColor(BLACK,WHITE);
+       printTimerMinute();  
+  }
+  else if(timerOption == 2){
+      if(goalSecond != 0){
+      goalSecond = goalSecond - 1; 
+      }
+      else{
+        goalSecond = 60;
+      }
+       tft.setTextColor(BLACK,WHITE);
+       printTimerSecond();  
+  }
+  else if(timerOption == 3){
+
+    tft.setTextColor(WHITE,BLACK);
+    printTimerSecond();  
+  
+    tft.setTextColor(BLACK,GREEN);
+    drawTimerStart();
+   }
+  else if(timerOption == 4){
+
+   tft.setTextColor(GREEN, BLACK);
+   drawTimerStart();
+   
+   tft.setTextColor(BLACK, RED);
+   drawTimerStop();
+
+ }
+ 
+}
+
+void timerUp(){
+  delay(100);
+    
+  if(timerOption == 0){  
+    if(goalHour < 99){
+      goalHour = goalHour + 1; 
+    }
+    else{
+      goalHour = 0; 
+    }
+     tft.setTextColor(BLACK,WHITE);
+     printTimerHour();
+  }
+  else if(timerOption == 1){
+      if(goalMinute < 60){
+        goalMinute = goalMinute + 1; 
+      }
+      else{
+        goalMinute = 0; 
+      }
+       tft.setTextColor(BLACK,WHITE);
+       printTimerMinute();
+  }
+  else if(timerOption == 2){
+      if(goalSecond <  60){
+        goalSecond = goalSecond + 1; 
+      }
+      else{
+        goalSecond = 0;
+      }
+       tft.setTextColor(BLACK,WHITE);
+       printTimerSecond(); 
+  }
+}
+
+void timerSelect(){
+  if(timerOption == 0){
+    
+     //select minutes
+     tft.setTextColor(WHITE,BLACK);
+     printTimerHour();
+     
+     tft.setTextColor(BLACK,WHITE);
+     printTimerMinute(); 
+     timerOption = 1; 
+  }
+  else if(timerOption == 1){
+    // select seconds
+
+     tft.setTextColor(WHITE,BLACK);
+     printTimerMinute(); 
+
+     tft.setTextColor(BLACK,WHITE);
+     printTimerSecond(); 
+     timerOption = 2;
+  }
+  else if(timerOption == 2){
+//   select start
+     tft.setTextColor(WHITE,BLACK);
+     printTimerSecond(); 
+
+     tft.setTextColor(BLACK,GREEN);
+     drawTimerStart(); 
+     
+     timerOption = 3;
+  }
+  else if(timerOption == 3){
+    //stop timer
+
+   tft.setTextColor(GREEN,BLACK);
+   drawTimerStart();
+
+   tft.setTextColor(BLACK,RED);
+   drawTimerStop();
+   
+   timerOption = 4;
+  }
+  else if(timerOption == 4){
+    //select reset
+    timerOption = 5; 
+  }
+  else if(timerOption == 5){
+    //select menu
+    timerOption = 0; 
+  }
+  else{
+    //select hour
+    timerOption = 0;
+  }
 }
 
 void menuUp(){
@@ -339,21 +587,6 @@ void drawMessages(){
 }
 
 
-void drawTimer(){
-
-     tft.fillRect(0,0,128,128,RED);
-
-   toggleNav(false, false, false, true);
-   getTime();
-
-   tft.setTextColor(WHITE,BLACK); 
-   tft.setTextSize(1); 
-   tft.setCursor(100,0);
-   tft.print("MENU"); 
-}
-
-
-
 void updateClock(){
    second+=1; 
  
@@ -415,7 +648,6 @@ if(isNotification){
 
 void getTime(){
   while(Serial.available() > 0){
-    tft.setTextColor(WHITE,BLACK); 
 
     String input = Serial.readStringUntil('\n');
     Serial.read();
@@ -435,6 +667,27 @@ void getTime(){
     second = currentTime.substring(minuteIndex+1, secondIndex).toInt(); 
 
   }
+}
+
+void getTextMessage(){
+ while(Serial.available() > 0){
+
+    String input = Serial.readStringUntil('\n');
+    Serial.read();
+    
+    int barIndexOne = input.indexOf('|');
+    int barIndexTwo = input.indexOf('|',barIndexOne+1); 
+    int barIndexThree = input.indexOf('|',barIndexTwo+1); 
+  
+    String textMessage = input.substring(barIndexThree+1, input.length());    
+    
+    tft.setTextColor(WHITE,BLACK); 
+    tft.setCursor(64,64);
+
+    tft.println(input); 
+
+  }
+  
 }
 
 
