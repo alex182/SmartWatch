@@ -25,11 +25,7 @@
  ****************************************************/
 
 // You can use any (4 or) 5 pins 
-#define sclk 3
-#define mosi 4
-#define dc   5
-#define cs   6
-#define rst  7
+
 
 // Color definitions
 #define BLACK           0x0000      /*   0,   0,   0 */
@@ -62,6 +58,17 @@
 #include <Timer.h>
 
 
+#define sclk 3
+#define mosi 4
+#define dc   5
+#define cs   6
+#define rst  7
+
+int upPin = 8; 
+int downPin = 9; 
+int selectPin= 10; 
+
+int ledPin = 11;
 
 int16_t hour = 0;
 int16_t minute = 0;
@@ -74,9 +81,7 @@ bool isHome = true;
 bool isMessages = false; 
 bool isTimer = false; 
 
-int upPin = 8; 
-int downPin = 9; 
-int selectPin= 10; 
+
 
 int down = 0;
 int up = 0;
@@ -91,15 +96,15 @@ String menuOptions [] = {"OPTION 4","TIMER","MESSAGES","HOME","MENU"};
 
 int timerOption = 0; 
 int timerOptionCount = 4;
+int timerEvent; 
 int goalHour = 0;
 int goalMinute = 0;
 int goalSecond = 0; 
-int timerHour = 0;
-int timerMinute = 0; 
-int timerSecond = 0; 
 bool timerHit = false;
 bool timerSet = false; 
-String timerPosition [] = {"start","stop"}; 
+
+
+
 
 
 // Option 1: use any pins but a little slower
@@ -111,21 +116,22 @@ void setup() {
  Serial.begin(9600);
  drawHome();
 
-
-  pinMode(downPin, INPUT_PULLUP);   
-  pinMode(upPin, INPUT_PULLUP);
-  pinMode(selectPin, INPUT_PULLUP);   
-  t.every(1000, updateClock);
+ pinMode(downPin, INPUT_PULLUP);   
+ pinMode(upPin, INPUT_PULLUP);
+ pinMode(selectPin, INPUT_PULLUP);   
+ t.every(1000, updateClock);
 //  t.every(500,getTextMessage);
   updateClock();
     getTime();
+    
+ pinMode(ledPin, OUTPUT); 
 
 //   getTextMessage();
 
 }
 
 void loop() {
-
+  
   down = digitalRead(downPin);  // read input value
   up = digitalRead(upPin);  // read input value
   select = digitalRead(selectPin);  // read input value
@@ -227,7 +233,7 @@ void printTimerMinute (){
 
 void printTimerSecond (){
      tft.setTextSize(2);
-     tft.setCursor(89,32); 
+     tft.setCursor(85,32); 
 
       if(goalSecond < 10){
          tft.print(0);
@@ -238,12 +244,66 @@ void printTimerSecond (){
       }        
 }
 
+void updateTimer(){
+
+if(!timerHit){
+
+   if(goalSecond == 0){
+      goalSecond = 59;
+      goalMinute = goalMinute - 1;
+    }
+  
+    if(goalMinute == -1){
+      goalMinute = 59;
+  
+      if(goalHour > 0){
+        goalHour = goalHour -1;
+      }
+    }
+        
+    goalSecond = goalSecond - 1;
+
+    if(goalSecond == -1){
+      goalSecond == 60;
+    }
+     
+   tft.setTextColor(WHITE,BLACK);
+     printTimerSecond();  
+
+      tft.setTextColor(WHITE,BLACK);
+     printTimerMinute();  
+
+      tft.setTextColor(WHITE,BLACK);
+     printTimerHour();  
+
+   if(goalSecond == 0 && goalMinute == 0 && goalHour == 0){
+    timerHit = true;
+    
+   }
+  }
+  else{
+
+    t.oscillate(ledPin, 500,LOW,5);
+    stopTimer();
+  }
+}
+  
+
+void startTimer(){
+  timerEvent = t.every(1000,updateTimer); 
+}
+
+void stopTimer(){
+  t.stop(timerEvent); 
+  timerHit = true;
+}
+
+
 void drawTimerStart(){
  
      tft.setCursor(32,58);
      tft.setTextSize(2);
-     tft.print("Start");
-  
+     tft.print("Start");  
 }
 
 void drawTimerStop(){
@@ -280,7 +340,7 @@ void  timerDown(){
       }
       else
       {
-        goalMinute = 60;
+        goalMinute = 59;
       }
        tft.setTextColor(BLACK,WHITE);
        printTimerMinute();  
@@ -290,7 +350,7 @@ void  timerDown(){
       goalSecond = goalSecond - 1; 
       }
       else{
-        goalSecond = 60;
+        goalSecond = 59;
       }
        tft.setTextColor(BLACK,WHITE);
        printTimerSecond();  
@@ -341,7 +401,7 @@ void timerUp(){
      printTimerHour();
   }
   else if(timerOption == 1){
-      if(goalMinute < 60){
+      if(goalMinute < 59){
         goalMinute = goalMinute + 1; 
       }
       else{
@@ -351,7 +411,7 @@ void timerUp(){
        printTimerMinute();
   }
   else if(timerOption == 2){
-      if(goalSecond <  60){
+      if(goalSecond <  59){
         goalSecond = goalSecond + 1; 
       }
       else{
@@ -363,7 +423,7 @@ void timerUp(){
 }
 
 void timerSelect(){
-  if(timerOption == 0){
+  if(timerOption == 0){ 
     
      //select minutes
      tft.setTextColor(WHITE,BLACK);
@@ -391,16 +451,18 @@ void timerSelect(){
      tft.setTextColor(BLACK,GREEN);
      drawTimerStart();    
      timerOption = 3;
+     
   }
   else if(timerOption == 3){
     //start timer
    tft.setTextColor(GREEN,BLACK);
    drawTimerStart();
+   timerHit = false;
+   startTimer();
 
    // select stop button
    tft.setTextColor(BLACK,RED);
-   drawTimerStop();
-   
+   drawTimerStop();  
    timerOption = 4;
   }
   else if(timerOption == 4){
@@ -410,11 +472,12 @@ void timerSelect(){
 
    tft.setTextColor(BLACK,WHITE); 
    drawMenuOption();
-   
-    timerOption = 5; 
+   stopTimer(); 
+   timerOption = 5; 
   }
   else{
     //draw menu
+    stopTimer();
     drawMenuOptions();
     timerOption = 0; 
   }
